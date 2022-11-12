@@ -1,9 +1,24 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useEffect, useState } from "react";
+import axios from "axios";
+import reactLogo from "./assets/react.svg";
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  navigator.geolocation.getCurrentPosition((position) => {
+    setLatitude(position.coords.latitude);
+    setLongitude(position.coords.longitude);
+  });
+  const apiCall = async () => {
+    axios.get("http://127.0.0.1:5100/").then((response) => {
+      console.log(response);
+    });
+  };
+  useEffect(() => {
+    apiCall();
+  }, []);
 
   return (
     <div className="App">
@@ -20,15 +35,12 @@ function App() {
         <button onClick={() => setCount((count) => count + 1)}>
           count is {count}
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+        현재 위도는 {latitude} <br /> 현재 경도는 {longitude}
       </p>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
