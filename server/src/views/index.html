@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLS</title>
+    <link rel="stylesheet", href="https://unpkg.com/mvp.css@1.12/mvp.css">
+</head>
+<body>
+    <header><h1>LLS</h1></header>
+    <main>
+        <div id="nickname">
+            <form>
+                <h4>Enter your nickname</h4>
+                <input placeholder="nickname", required, type="text">
+                <button>Save</button>
+            </form>
+        </div>
+        <div id="mainPage">
+            <form id="nickList">
+                <h3 id="myname">Your Nickname : </h3>
+                <p>Choose clients you want to share your location!</p>
+            </form>
+        </div>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../public/js/index.js"></script>
+</body>
+</html>
