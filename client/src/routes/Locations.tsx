@@ -17,8 +17,8 @@ const LocationContainer = styled.div`
 
 const MapContainer = styled.div`
   box-sizing: border-box;
-  width: 500px;
-  height: 400px;
+  width: 800px;
+  height: 600px;
   border-radius: 16px;
 `;
 
@@ -26,8 +26,8 @@ const UserListContainer = styled.div`
   box-sizing: border-box;
   background-color: #1a1a1a;
   border-radius: 16px;
-  width: 200px;
-  height: 400px;
+  width: 280px;
+  height: 600px;
   overflow-y: scroll;
   display: flex;
   flex-direction: column;
@@ -35,6 +35,9 @@ const UserListContainer = styled.div`
   justify-content: flex-start;
   gap: 10px;
   padding: 10px;
+  ::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 const UserListItem = styled.div`
