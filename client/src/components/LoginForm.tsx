@@ -1,12 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { Label } from "@twilio-paste/core/label";
 import { Heading } from "@twilio-paste/core/heading";
-import Login from "../routes/Login";
-import { Link } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 interface InputProps {
-  inputContent: string;
+  nickname: string;
 }
 
 const LoginFormContainer = styled.div`
@@ -32,7 +32,7 @@ const NicknameInput = styled.input`
   border-radius: 4px;
 `;
 
-const SubmitButton = styled(Link)`
+const SubmitButton = styled.input`
   box-sizing: border-box;
   margin-top: 20px;
   padding: 12px 16px;
@@ -43,34 +43,14 @@ const SubmitButton = styled(Link)`
   text-decoration: unset;
 `;
 
-function SingleInputForm({ inputContent }: InputProps) {
-  return (
-    <div
-      style={{
-        width: "400px",
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: "8px",
-      }}
-    >
-      <Label htmlFor={inputContent} required>
-        Enter {inputContent}
-      </Label>
-      <NicknameInput
-        aria-describedby="nickname"
-        id={inputContent}
-        name="nickname"
-        type={inputContent === "password" ? "password" : "text"}
-        placeholder="Enter your information"
-        required
-      />
-    </div>
-  );
-}
-
 function LoginForm() {
+  const { register, handleSubmit } = useForm();
+  const navigator = useNavigate();
+  const onSubmit = (nickname: InputProps) => {
+    console.log(nickname);
+    window.localStorage.setItem("nickname", JSON.stringify(nickname));
+    navigator("/locations");
+  };
   return (
     <LoginFormContainer>
       <div style={{ paddingBottom: "40px" }}>
@@ -78,9 +58,30 @@ function LoginForm() {
           Login to LLS
         </Heading>
       </div>
-      <SingleInputForm inputContent="nickname" />
-      <SingleInputForm inputContent="password" />
-      <SubmitButton to="/">Login 👉</SubmitButton>
+      <form
+        style={{
+          width: "400px",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+          gap: "8px",
+        }}
+        onSubmit={handleSubmit(onSubmit)}
+      >
+        <Label htmlFor="nickname" required>
+          Enter nickname
+        </Label>
+        <NicknameInput
+          aria-describedby="nickname"
+          id="nickname"
+          {...register("nickname", { required: true })}
+          type="text"
+          placeholder="Enter your information"
+          required
+        />
+        <SubmitButton type="submit" value="Login 👉" />
+      </form>
     </LoginFormContainer>
   );
 }
