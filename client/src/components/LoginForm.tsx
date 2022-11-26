@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import styled from "styled-components";
 import { Label } from "@twilio-paste/core/label";
 import { Heading } from "@twilio-paste/core/heading";
@@ -22,7 +21,6 @@ const LoginFormContainer = styled.div`
   align-items: center;
   gap: 24px;
 `;
-
 const NicknameInput = styled.input`
   box-sizing: border-box;
   border: 1px solid #888888;
@@ -31,7 +29,6 @@ const NicknameInput = styled.input`
   width: 90%;
   border-radius: 4px;
 `;
-
 const SubmitButton = styled.input`
   box-sizing: border-box;
   margin-top: 20px;
@@ -44,7 +41,7 @@ const SubmitButton = styled.input`
 `;
 
 function LoginForm() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit } = useForm<InputProps>();
   const navigator = useNavigate();
   const onSubmit = (nickname: InputProps) => {
     console.log(nickname);
