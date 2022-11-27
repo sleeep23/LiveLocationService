@@ -59,12 +59,12 @@ io.on("connection", (socket) => {
     AddUserLocation(user.nickname, user.location);
   });
   socket.on("getUserLocations", () => {
-    io.to(socket.id).emit("sendUserLocations", GetUserLocations(), () => {
+    socket.emit("sendUserLocations", GetUserLocations(), () => {
       console.log("Here are the user locations");
     });
   });
   socket.on("disconnect", () => {
-    io.to(socket.id).emit("get_user_nickname");
+    socket.emit("get_user_nickname");
     DeleteUserLocation(cntUser);
   });
 });

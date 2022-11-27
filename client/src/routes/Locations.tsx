@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Map, MapMarker } from "react-kakao-maps-sdk";
+import { Map, MapMarker, StaticMap } from "react-kakao-maps-sdk";
 import { Heading } from "@twilio-paste/core/heading";
 import { useEffect, useRef, useState } from "react";
 
@@ -77,8 +77,9 @@ function Locations() {
   /**
    * @note Error occurs when loading KaKao Map UI -> Partially resolved
    */
-  const [nickname, setNickname] = useState("");
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
+  const [nickname, setNickname] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const cntLocation = useGeoloaction();
 
   useEffect(() => {
@@ -113,15 +114,6 @@ function Locations() {
     });
   }, [socket, userLocations, nickname, cntLocation]);
   console.log(users);
-  const markers = users.map((users, idx) => {
-    return (
-      <MapMarker position={users.location} title={users.nickname} key={idx}>
-        <div style={{ fontSize: "12px", padding: "5px", color: "#000" }}>
-          {users.nickname}
-        </div>
-      </MapMarker>
-    );
-  });
   return (
     <LocationContainer>
       <Heading as="h1" variant="heading10">
@@ -141,8 +133,55 @@ function Locations() {
             }}
             zoomable={true}
           >
-            {markers}
+            {users.map(({ location, nickname }, idx) => {
+              return (
+                <MapMarker
+                  position={location}
+                  title={nickname}
+                  key={idx}
+                  image={{
+                    src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
+                    size: { width: 12, height: 18 },
+                  }}
+                  clickable={true}
+                  onClick={() => setIsOpen((prev) => !prev)}
+                >
+                  {isOpen && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        padding: "5px",
+                        color: "#000",
+                      }}
+                    >
+                      {nickname}
+                    </div>
+                  )}
+                </MapMarker>
+              );
+            })}
           </Map>
+          {/*<StaticMap // 지도를 표시할 Container*/}
+          {/*  center={{*/}
+          {/*    // 지도의 중심좌표*/}
+          {/*    lat: cntLocation.coordinates?.lat as number,*/}
+          {/*    lng: cntLocation.coordinates?.lng as number,*/}
+          {/*  }}*/}
+          {/*  style={{*/}
+          {/*    // 지도의 크기*/}
+          {/*    width: "100%",*/}
+          {/*    height: "100%",*/}
+          {/*  }}*/}
+          {/*  marker={[*/}
+          {/*    ...users.map((user) => {*/}
+          {/*      return {*/}
+          {/*        position: user.location,*/}
+          {/*        text: user.nickname,*/}
+          {/*      };*/}
+          {/*    }),*/}
+          {/*  ]}*/}
+          {/*  level={3} // 지도의 확대 레벨*/}
+          {/*/>*/}
         </MapContainer>
         <UserListContainer>
           {users.map((user, idx) => {
