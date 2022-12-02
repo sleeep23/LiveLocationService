@@ -1,12 +1,15 @@
 import styled from "styled-components";
-import { Map, MapMarker, StaticMap } from "react-kakao-maps-sdk";
+
 import { Heading } from "@twilio-paste/core/heading";
-import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 // socket connection
 import { io } from "socket.io-client";
 import { userLocations, UserLocationType } from "../const/userInfos";
 import useGeoloaction from "../hook/useGeoloaction";
+import UserList from "../components/List/UserList";
+import MapWithLocations from "../components/Map/MapWithLocations";
 const socket = io("http://localhost:5100");
 
 const LocationContainer = styled.div`
@@ -21,65 +24,37 @@ const LocationContainer = styled.div`
   justify-content: center;
   gap: 80px;
 `;
-const MapContainer = styled.div`
-  box-sizing: border-box;
-  width: 800px;
-  height: 600px;
-  border-radius: 16px;
-`;
-const UserListContainer = styled.div`
-  box-sizing: border-box;
-  background-color: #1a1a1a;
-  border-radius: 16px;
-  width: 280px;
-  height: 600px;
-  overflow-y: scroll;
-  gap: 10px;
-  padding: 10px;
-  scrollbar-width: none;
-  ::-webkit-scrollbar {
-    //display: none;
-    width: 0;
-  }
-`;
-const UserListItemContainer = styled.div`
-  box-sizing: border-box;
-  margin-bottom: 10px;
-  margin-top: 0;
-  padding: 20px;
-  width: 100%;
-  height: 80px;
-  border-radius: 16px;
-  background-color: #888888;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 20px;
-`;
 const MapAndListContainer = styled.div`
   box-sizing: border-box;
   display: flex;
   flex-direction: row;
   gap: 20px;
 `;
-
-function UserListItem({ username, idx }: { username: string; idx: number }) {
-  return (
-    <UserListItemContainer>
-      <p style={{ fontSize: "20px" }}>User {idx + 1} :</p>
-      <p style={{ fontSize: "20px" }}>{username}</p>
-    </UserListItemContainer>
-  );
-}
+const NavLinkContainer = styled.div`
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+`;
+const LinkContainer = styled(Link)`
+  text-decoration: unset;
+  color: white;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background-color: #646cff;
+  :hover {
+    background-color: #747bff;
+  }
+`;
 
 function Locations() {
-  /**
-   * @note Error occurs when loading KaKao Map UI -> Partially resolved
-   */
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
+  const [checkedUsers, setCheckedUsers] = useState<Array<UserLocationType>>([]);
   const [nickname, setNickname] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const cntLocation = useGeoloaction();
 
   useEffect(() => {
@@ -119,77 +94,13 @@ function Locations() {
       <Heading as="h1" variant="heading10">
         Hello {nickname} 👋 <br /> Find your friends' locations!
       </Heading>
+      <NavLinkContainer>
+        <LinkContainer to="/">👉 Go to Main Menu</LinkContainer>
+        <LinkContainer to="/">👉 Go to Chatting</LinkContainer>
+      </NavLinkContainer>
       <MapAndListContainer>
-        <MapContainer>
-          <Map
-            center={{
-              lat: cntLocation.coordinates?.lat as number,
-              lng: cntLocation.coordinates?.lng as number,
-            }}
-            style={{
-              width: "100%",
-              height: "100%",
-              borderRadius: "16px",
-            }}
-            zoomable={true}
-          >
-            {users.map(({ location, nickname }, idx) => {
-              return (
-                <MapMarker
-                  position={location}
-                  title={nickname}
-                  key={idx}
-                  image={{
-                    src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
-                    size: { width: 12, height: 18 },
-                  }}
-                  clickable={true}
-                  onClick={() => setIsOpen((prev) => !prev)}
-                >
-                  {isOpen && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        padding: "5px",
-                        color: "#000",
-                      }}
-                    >
-                      {nickname}
-                    </div>
-                  )}
-                </MapMarker>
-              );
-            })}
-          </Map>
-          {/*<StaticMap // 지도를 표시할 Container*/}
-          {/*  center={{*/}
-          {/*    // 지도의 중심좌표*/}
-          {/*    lat: cntLocation.coordinates?.lat as number,*/}
-          {/*    lng: cntLocation.coordinates?.lng as number,*/}
-          {/*  }}*/}
-          {/*  style={{*/}
-          {/*    // 지도의 크기*/}
-          {/*    width: "100%",*/}
-          {/*    height: "100%",*/}
-          {/*  }}*/}
-          {/*  marker={[*/}
-          {/*    ...users.map((user) => {*/}
-          {/*      return {*/}
-          {/*        position: user.location,*/}
-          {/*        text: user.nickname,*/}
-          {/*      };*/}
-          {/*    }),*/}
-          {/*  ]}*/}
-          {/*  level={3} // 지도의 확대 레벨*/}
-          {/*/>*/}
-        </MapContainer>
-        <UserListContainer>
-          {users.map((user, idx) => {
-            return (
-              <UserListItem key={idx} username={user.nickname} idx={idx} />
-            );
-          })}
-        </UserListContainer>
+        <MapWithLocations cntLocation={cntLocation} users={users} />
+        <UserList users={users} />
       </MapAndListContainer>
     </LocationContainer>
   );

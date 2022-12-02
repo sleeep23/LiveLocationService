@@ -46,7 +46,7 @@ function LoginForm() {
   const onSubmit = (nickname: InputProps) => {
     console.log(nickname);
     window.localStorage.setItem("nickname", JSON.stringify(nickname));
-    navigator("/locations");
+    navigator("/");
   };
   return (
     <LoginFormContainer>

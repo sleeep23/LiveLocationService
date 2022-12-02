@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.1.1",
     "@twilio-paste/core": "^17.0.1",
     "@twilio-paste/icons": "^9.4.0",
     "axios": "^1.1.3",
