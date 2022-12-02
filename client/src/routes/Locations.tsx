@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from "react";
 
 // socket connection
 import { io } from "socket.io-client";
-import { userLocations, UserLocationType } from "../const/userInfos";
+import { userLocations, UserLocationType }      from "../const/userInfos";
 import useGeoloaction from "../hook/useGeoloaction";
-const socket = io("http://localhost:5100");
+const socket = io();
 
 const LocationContainer = styled.div`
   box-sizing: border-box;
