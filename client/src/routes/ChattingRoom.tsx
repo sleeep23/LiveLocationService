@@ -10,9 +10,8 @@ function ChattingRoom() {
 
   socket.emit("createRoom", /*selectedID*/);
 
-  socket.on("roomNameSend", (roomName) => {
-    const nickname: any = window.localStorage.getItem("nickname");
-    socket.emit("joinRoom", roomName, nickname);
+  socket.on("sendRoomName", (roomName) => {
+    socket.emit("joinRoom", roomName);
   })
 
   

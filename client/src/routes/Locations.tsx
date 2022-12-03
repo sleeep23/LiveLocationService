@@ -101,10 +101,10 @@ function Locations() {
     });
 
     // Send the getUserLocations event to the socketIO server to get the users locations list
-    socket.emit("getUserLocations");
+    socket.emit("get_location");
 
     // If socketIO sent the users' locations, cache the list and render it.
-    socket.on("sendUserLocations", (data) => {
+    socket.on("send_locations", (data) => {
       setUsers([...data]);
     });
 
