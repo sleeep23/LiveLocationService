@@ -8,6 +8,8 @@ import { userLocations, UserLocationType } from "../types/userInfos";
 
 // socket connection
 import { io } from "socket.io-client";
+import axios from "axios";
+
 const socket = io("http://localhost:5100");
 
 const LocationContainer = styled.div`
@@ -52,59 +54,62 @@ const LinkContainer = styled(Link)`
 interface UsernameProps {
   username: string;
 }
+interface LocationProp {
+  lat: number;
+  lng: number;
+}
 
 function Locations({ username }: { username: string }) {
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
   const [checkedUsers, setCheckedUsers] = useState<Set<number> | undefined>();
-  const [newUser, setNewUser] = useState(true);
+  // const [newUser, setNewUser] = useState(true);
   const [locationChanged, setLocationChanged] = useState(false);
+  const [location, setLocation] = useState<LocationProp>({ lat: 35, lng: 35 });
   // types [nickname, setNickname] = useState("");
   const cntLocation: locationType = useGeoloaction();
   console.log(cntLocation);
 
   useEffect(() => {
     // Send the user's location to the server with the user nickname
-    if (username !== "") {
-      socket.emit("get_user_list");
-      socket.on("send_user_list", (data: Array<UsernameProps>) => {
-        data.forEach((user: UsernameProps) => {
-          if (user.username === username) {
-            setNewUser(false);
+    const getLocation = async () => {
+      const locationData = await axios
+        .get(
+          "https://ipgeolocation.abstractapi.com/v1/?api_key=daf9e325320547d9ab6e8f93060215d3"
+        )
+        .then((response) => {
+          return response;
+        });
+
+      if (username !== "") {
+        if (locationChanged) {
+          await socket.emit("update_location", {
+            nickname: username,
+            location: {
+              lat: locationData.data.latitude,
+              lng: locationData.data.longitude,
+            },
+          });
+        } else {
+          await socket.emit("addUserLocation", {
+            nickname: username,
+            location: {
+              lat: locationData.data.latitude,
+              lng: locationData.data.longitude,
+            },
+          });
+          await setLocationChanged(true);
+        }
+
+        await socket.emit("get_location");
+        await socket.on("send_locations", (data) => {
+          if (data) {
+            setUsers(data as Array<UserLocationType>);
           }
         });
-      });
-      if (locationChanged) {
-        socket.emit("update_location", {
-          nickname: username,
-          location: {
-            lat: cntLocation.coordinates?.lat as number,
-            lng: cntLocation.coordinates?.lng as number,
-          },
-        });
-      } else {
-        socket.emit("addUserLocation", {
-          nickname: username,
-          location: {
-            lat: cntLocation.coordinates?.lat as number,
-            lng: cntLocation.coordinates?.lng as number,
-          },
-        });
-        setLocationChanged(true);
       }
-      // Send the get_location event to the socketIO server to get the users locations list
-      socket.emit("get_location");
-      // If socketIO server sends the users' locations, cache the list and render it.
-      socket.on("send_locations", (data) => {
-        if (data) {
-          setUsers(data as Array<UserLocationType>);
-        }
-      });
-      // Send the user's nickname to the socketIO server
-      // socket.on("get_user_nickname", () => {
-      //   socket.emit("send_user_nickname", username);
-      // });
-    }
-  }, [socket, userLocations, username, cntLocation, locationChanged]);
+    };
+    getLocation();
+  }, [socket, userLocations, username, locationChanged]);
 
   return (
     <LocationContainer>
