@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import styled from "styled-components";
 import { locationType } from "../../hook/useGeoloaction";
-import { UserLocationType } from "../../const/userInfos";
+import { UserLocationType } from "../../types/userInfos";
 
 interface MapProps {
   cntLocation: locationType;
@@ -32,11 +32,15 @@ function MapWithLocations({ cntLocation, users }: MapProps) {
         }}
         zoomable={true}
       >
-        {users.map(({ location, nickname }, idx) => {
+        {users.map((user, idx) => {
+          const temp = {
+            lat: user.location[0].lat,
+            lng: user.location[0].lng,
+          };
           return (
             <MapMarker
-              position={location}
-              title={nickname}
+              position={temp}
+              title={user.nickname}
               key={idx}
               image={{
                 src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
@@ -53,7 +57,7 @@ function MapWithLocations({ cntLocation, users }: MapProps) {
                     color: "#000",
                   }}
                 >
-                  {nickname}
+                  {user.nickname}
                 </div>
               )}
             </MapMarker>

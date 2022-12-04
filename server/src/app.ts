@@ -4,7 +4,6 @@ import http from "http";
 import { Server } from "socket.io";
 // import { userLocations } from "./DB/userLocations.js";
 import { LocationType } from "./types/userTypes";
-import { ChatType } from "./types/chatTypes";
 import { createClient } from "@supabase/supabase-js";
 import { exit } from "process";
 
@@ -43,10 +42,6 @@ interface UserLocationType {
 
 // Fake DB with type Map
 export let users: Map<string, string> = new Map();
-export let userLocations: Map<string, LocationType> = new Map();
-export let cntUser: string = "Default";
-export let roomInfo: Map<string, string> = new Map(); // Room Map storing room name and room id(host's socket id)
-export let chattings: Array<ChatType> = []; // chatting format
 
 // Adding user and their locations
 const AddUser = async (userID: string, userName: string) => {
@@ -65,28 +60,28 @@ const RemoveUser = async (userID: string) => {
   await supabase.from("user").delete().match({ user_id: userID });
   if (error) console.log(error);
 };
-const GetUserInfo = async (userID: string) => {
-  const { data, error } = await supabase
-    .from("user")
-    .select("user_name")
-    .eq("user_id", userID);
-  return data?.pop();
+const GetUserInfo = async () => {
+  const { data, error } = await supabase.from("user").select("user_name");
+  if (error) console.log(error);
+  return data;
 };
-const AddUserLocation = async (userID: string, location: LocationType) => {
+
+const AddUserLocation = async (userName: string, location: LocationType) => {
   const { error } = await supabase
     .from("user_location")
-    .insert({ user_id: userID, lat: location.lat, lng: location.lng });
+    .insert({ user_name: userName, lat: location.lat, lng: location.lng });
   if (error) console.log("Supabase DB insertion failed: ", error.message);
 };
-const updateUserLocation = async (userID: string, location: LocationType) => {
+const updateUserLocation = async (userName: string, location: LocationType) => {
   // regular location update
   const { error } = await supabase
     .from("user_location")
     .update({ lat: location.lat, lng: location.lng })
-    .eq("user_id", "userID");
+    .eq("user_name", userName);
 };
 const GetUserLocations = async () => {
-  const { data, error } = await supabase.from("user_location").select();
+  const { data, error } = await supabase.from("user_location").select("*");
+
   if (error) console.log("Supabase DB selection failed: ", error.message);
   else return data;
 };
@@ -127,52 +122,34 @@ const GetChatMessage = async (roomId: any) => {
   if (!error) return data;
 };
 
-// ------------------- Supabase test code -------------------------
-const getTable = async () => {
-  const { data, error } = await supabase
-    .from("user")
-    .select("user_name")
-    .in("user_id", ["asdfghkl", "12345", "23456"]);
-  let roomName = ``;
-  data?.forEach((names) => {
-    roomName = roomName + `${names.user_name}, `;
-  });
-  console.log(roomName);
-};
-getTable();
-
-const deleteTable = async () => {
-  const { error } = await supabase
-    .from("chat_member")
-    .delete()
-    .match({ user_id: "asdfghkl" });
-  await supabase.from("user_location").delete().match({ user_id: "asdfghkl" });
-  await supabase.from("user").delete().match({ user_id: "asdfghkl" });
-  if (error) console.log(error);
-};
-
-deleteTable();
-// --------------------------------------------------------------
-
 // Socket connection
 io.on("connection", (socket) => {
-  socket.on("send_user_nickname", (nickname: string) => {
-    cntUser = nickname;
-  });
   socket.on("addUser", (user) => {
-    AddUser(socket.id, user.nickname);
+    if (users.get(user.nickname)) {
+      console.log("refresh");
+    }
+    users.set(user.nickname, socket.id);
+    const user_id = users.get(user.nickname);
+    if (user_id) {
+      AddUser(user_id, user.nickname);
+    }
   });
-  socket.on("addUserLocation", (user) => {
-    AddUserLocation(socket.id, user.location);
+  socket.on("addUserLocation", async (user) => {
+    AddUserLocation(user.nickname, user.location);
   });
-  socket.on("get_location", () => {
-    socket.emit("send_locations", GetUserLocations(), () => {
+  socket.on("get_location", async () => {
+    const data = await GetUserLocations();
+    socket.emit("send_locations", data, () => {
       console.log("Here are the user locations");
     });
   });
+  socket.on("get_user_list", async () => {
+    const data = await GetUserInfo();
+    socket.emit("send_user_list", data);
+  });
   socket.on("update_location", (user) => {
     // receive regular update calls
-    updateUserLocation(socket.id, user.location);
+    updateUserLocation(user.nickname, user.location);
   });
 
   // receive socket id of a clicked client
@@ -240,23 +217,23 @@ io.on("connection", (socket) => {
     // output format example: [{user_id: userID, room_id: roomID, message: Message, time: current_time}, ...]
   });
 
-  socket.on("leaveRoom", async (userID: string, roomID: string) => {
-    const { data, error } = await supabase
-      .from("chat_room")
-      .select("room_name")
-      .eq("room_id", roomID);
-    const roomName: any = data?.forEach((item) => item.room_name);
-    const userName: any = GetUserInfo(userID);
-    deleteRoomData(userID, roomID);
-    socket.leave(roomName);
-    socket
-      .in(roomName)
-      .emit("leaveRoomMessage", `${userName.user_name} has left from the room`);
-    // send the message that someone leaves the room to everyone in the room
-  });
+  // socket.on("leaveRoom", async (userID: string, roomID: string) => {
+  //   const { data, error } = await supabase
+  //     .from("chat_room")
+  //     .select("room_name")
+  //     .eq("room_id", roomID);
+  //   const roomName: any = data?.forEach((item) => item.room_name);
+  //   const userName: any = GetUserInfo();
+  //   deleteRoomData(userID, roomID);
+  //   socket.leave(roomName);
+  //   socket
+  //     .in(roomName)
+  //     .emit("leaveRoomMessage", `${userName.user_name} has left from the room`);
+  //   // send the message that someone leaves the room to everyone in the room
+  // });
 
   socket.on("disconnect", () => {
-    RemoveUser(socket.id);
+    // RemoveUser(socket.id);
     // socket.emit("get_user_nickname");
   });
 });

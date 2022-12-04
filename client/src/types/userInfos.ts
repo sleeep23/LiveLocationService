@@ -5,7 +5,7 @@ export interface LocationType {
 
 export interface UserLocationType {
   nickname: string;
-  location: LocationType;
+  location: LocationType[];
 }
 
 export let userLocations: Array<UserLocationType> = [];

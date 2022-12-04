@@ -12,10 +12,14 @@ const LoginPageContainer = styled.div`
   align-items: center;
 `;
 
-function Login() {
+function Login({
+  setUsername,
+}: {
+  setUsername: React.Dispatch<React.SetStateAction<string>>;
+}) {
   return (
     <LoginPageContainer>
-      <LoginForm />
+      <LoginForm setUsername={setUsername} />
     </LoginPageContainer>
   );
 }

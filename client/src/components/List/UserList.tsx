@@ -1,5 +1,5 @@
 import React from "react";
-import { UserLocationType } from "../../const/userInfos";
+import { UserLocationType } from "../../types/userInfos";
 import UserListItem from "./UserListItem";
 import styled from "styled-components";
 

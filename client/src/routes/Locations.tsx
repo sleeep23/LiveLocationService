@@ -1,12 +1,10 @@
 import styled from "styled-components";
-
-import { Heading } from "@twilio-paste/core/heading";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 import UserList from "../components/List/UserList";
 import MapWithLocations from "../components/Map/MapWithLocations";
-import { userLocations, UserLocationType } from "../const/userInfos";
+import { userLocations, UserLocationType } from "../types/userInfos";
 
 // socket connection
 import { io } from "socket.io-client";
@@ -51,62 +49,62 @@ const LinkContainer = styled(Link)`
   }
 `;
 
-function Locations() {
-  const [users, setUsers] = useState<Array<UserLocationType>>([
-    { nickname: "John", location: { lat: 35, lng: 36 } },
-    { nickname: "John", location: { lat: 35, lng: 36 } },
-    { nickname: "John", location: { lat: 35, lng: 36 } },
-    { nickname: "John", location: { lat: 35, lng: 36 } },
-    { nickname: "John", location: { lat: 35, lng: 36 } },
-  ]);
+interface UsernameProps {
+  username: string;
+}
+
+function Locations({ username }: { username: string }) {
+  const [users, setUsers] = useState<Array<UserLocationType>>([]);
   const [checkedUsers, setCheckedUsers] = useState<Set<number> | undefined>();
-  const [nickname, setNickname] = useState("");
+  const [newUser, setNewUser] = useState(true);
   const [locationChanged, setLocationChanged] = useState(false);
+  // types [nickname, setNickname] = useState("");
   const cntLocation: locationType = useGeoloaction();
-  console.log(checkedUsers);
+  console.log(cntLocation);
+
   useEffect(() => {
-    // Get user's nickname from browser's localStorage
-    const item: string | null = window.localStorage.getItem("nickname");
-    const user = JSON.parse(item as string);
-    setNickname(user.nickname);
-
-    // Send the user's nickname to socketIO server
-    socket.emit("addUser", { nickname: user.nickname });
-    console.log(cntLocation);
     // Send the user's location to the server with the user nickname
-    if (locationChanged) {
-      socket.emit("update_location", {
-        nickname: user.nickname,
-        location: {
-          lat: cntLocation.coordinates?.lat,
-          lng: cntLocation.coordinates?.lng,
-        },
+    if (username !== "") {
+      socket.emit("get_user_list");
+      socket.on("send_user_list", (data: Array<UsernameProps>) => {
+        data.forEach((user: UsernameProps) => {
+          if (user.username === username) {
+            setNewUser(false);
+          }
+        });
       });
-    } else {
-      socket.emit("addUserLocation", {
-        nickname: user.nickname,
-        location: {
-          lat: cntLocation.coordinates?.lat,
-          lng: cntLocation.coordinates?.lng,
-        },
+      if (locationChanged) {
+        socket.emit("update_location", {
+          nickname: username,
+          location: {
+            lat: cntLocation.coordinates?.lat as number,
+            lng: cntLocation.coordinates?.lng as number,
+          },
+        });
+      } else {
+        socket.emit("addUserLocation", {
+          nickname: username,
+          location: {
+            lat: cntLocation.coordinates?.lat as number,
+            lng: cntLocation.coordinates?.lng as number,
+          },
+        });
+        setLocationChanged(true);
+      }
+      // Send the get_location event to the socketIO server to get the users locations list
+      socket.emit("get_location");
+      // If socketIO server sends the users' locations, cache the list and render it.
+      socket.on("send_locations", (data) => {
+        if (data) {
+          setUsers(data as Array<UserLocationType>);
+        }
       });
-      setLocationChanged(true);
+      // Send the user's nickname to the socketIO server
+      // socket.on("get_user_nickname", () => {
+      //   socket.emit("send_user_nickname", username);
+      // });
     }
-
-    // Send the get_location event to the socketIO server to get the users locations list
-    socket.emit("get_location");
-
-    // If socketIO server sends the users' locations, cache the list and render it.
-    socket.on("send_location", (data) => {
-      // setUsers([...data]);
-      console.log(data);
-    });
-
-    // Send the user's nickname to the socketIO server
-    socket.on("get_user_nickname", () => {
-      socket.emit("send_user_nickname", nickname);
-    });
-  }, [socket, userLocations, nickname, cntLocation, locationChanged]);
+  }, [socket, userLocations, username, cntLocation, locationChanged]);
 
   return (
     <LocationContainer>
@@ -118,7 +116,7 @@ function Locations() {
           paddingTop: "40px",
         }}
       >
-        Hello {nickname} 👋! Find your friends' locations!
+        Hello {username} 👋! Find your friends' locations!
       </h1>
       <NavLinkContainer>
         <LinkContainer to="/">👉 Go to Main Menu</LinkContainer>

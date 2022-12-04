@@ -4,6 +4,12 @@ import { Heading } from "@twilio-paste/core/heading";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
+// socket io connection
+import { io } from "socket.io-client";
+import React, { useEffect, useState } from "react";
+import useGeoloaction, { locationType } from "../hook/useGeoloaction";
+const socket = io("http://localhost:5100");
+
 interface InputProps {
   nickname: string;
 }
@@ -40,13 +46,23 @@ const SubmitButton = styled.input`
   text-decoration: unset;
 `;
 
-function LoginForm() {
+function LoginForm({
+  setUsername,
+}: {
+  setUsername: React.Dispatch<React.SetStateAction<string>>;
+}) {
   const { register, handleSubmit } = useForm<InputProps>();
   const navigator = useNavigate();
-  const onSubmit = (nickname: InputProps) => {
-    console.log(nickname);
-    window.localStorage.setItem("nickname", JSON.stringify(nickname));
-    navigator("/");
+  const cntLocation: locationType = useGeoloaction();
+  let username = "";
+  const onSubmit = (user: InputProps) => {
+    if (user.nickname.includes(" ")) {
+      alert("Please enter a one word nickname!");
+    } else {
+      setUsername(user.nickname);
+      socket.emit("addUser", { nickname: user.nickname });
+      navigator("/");
+    }
   };
   return (
     <LoginFormContainer>
