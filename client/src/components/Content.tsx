@@ -18,7 +18,7 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
+  justify-content: space-between;
   gap: 40px;
   border-radius: 16px;
   border: 1px solid #747bff;
@@ -29,6 +29,12 @@ const IconContainer = styled.div`
   height: 100px;
   box-sizing: border-box;
   margin-top: 20px;
+  background-color: white;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 `;
 
 const IconLinkContainer = styled(Link)`
@@ -48,9 +54,13 @@ function Content({ iconType, service }: SProps) {
     <ContentContainer>
       <IconContainer>
         {iconType === "location" ? (
-          <ProductAdminUsersIcon decorative={true} />
+          <ProductAdminUsersIcon size="sizeIcon70" decorative={true} />
         ) : (
-          <ChatIcon decorative={true} />
+          <ChatIcon
+            size="sizeIcon70"
+            decorative={true}
+            style={{ color: "white" }}
+          />
         )}
       </IconContainer>
       <div
@@ -61,9 +71,7 @@ function Content({ iconType, service }: SProps) {
           lineHeight: "1.4",
         }}
       >
-        <Heading as="h3" variant="heading30">
-          {service}
-        </Heading>
+        <h2 style={{ color: "white", margin: "0" }}>{service}</h2>
       </div>
       {iconType === "location" ? (
         <IconLinkContainer to="/locations">

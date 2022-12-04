@@ -3,13 +3,13 @@ import styled from "styled-components";
 import { Heading } from "@twilio-paste/core/heading";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import useGeoloaction, { locationType } from "../hook/useGeoloaction";
+import UserList from "../components/List/UserList";
+import MapWithLocations from "../components/Map/MapWithLocations";
+import { userLocations, UserLocationType } from "../const/userInfos";
 
 // socket connection
 import { io } from "socket.io-client";
-import { userLocations, UserLocationType } from "../const/userInfos";
-import useGeoloaction from "../hook/useGeoloaction";
-import UserList from "../components/List/UserList";
-import MapWithLocations from "../components/Map/MapWithLocations";
 const socket = io("http://localhost:5100");
 
 const LocationContainer = styled.div`
@@ -52,11 +52,18 @@ const LinkContainer = styled(Link)`
 `;
 
 function Locations() {
-  const [users, setUsers] = useState<Array<UserLocationType>>([]);
-  const [checkedUsers, setCheckedUsers] = useState<Array<UserLocationType>>([]);
+  const [users, setUsers] = useState<Array<UserLocationType>>([
+    { nickname: "John", location: { lat: 35, lng: 36 } },
+    { nickname: "John", location: { lat: 35, lng: 36 } },
+    { nickname: "John", location: { lat: 35, lng: 36 } },
+    { nickname: "John", location: { lat: 35, lng: 36 } },
+    { nickname: "John", location: { lat: 35, lng: 36 } },
+  ]);
+  const [checkedUsers, setCheckedUsers] = useState<Set<number> | undefined>();
   const [nickname, setNickname] = useState("");
-  const cntLocation = useGeoloaction();
-
+  const [locationChanged, setLocationChanged] = useState(false);
+  const cntLocation: locationType = useGeoloaction();
+  console.log(checkedUsers);
   useEffect(() => {
     // Get user's nickname from browser's localStorage
     const item: string | null = window.localStorage.getItem("nickname");
@@ -64,43 +71,62 @@ function Locations() {
     setNickname(user.nickname);
 
     // Send the user's nickname to socketIO server
-    socket.emit("addUser", { nickname: user.nickname });
-
+    socket.emit("add_user", { nickname: user.nickname });
+    console.log(cntLocation);
     // Send the user's location to the server with the user nickname
-    socket.emit("addUserLocation", {
-      nickname: user.nickname,
-      location: {
-        lat: cntLocation.coordinates?.lat,
-        lng: cntLocation.coordinates?.lng,
-      },
-    });
+    if (locationChanged) {
+      socket.emit("update_location", {
+        nickname: user.nickname,
+        location: {
+          lat: cntLocation.coordinates?.lat,
+          lng: cntLocation.coordinates?.lng,
+        },
+      });
+    } else {
+      socket.emit("add_user_location", {
+        nickname: user.nickname,
+        location: {
+          lat: cntLocation.coordinates?.lat,
+          lng: cntLocation.coordinates?.lng,
+        },
+      });
+      setLocationChanged(true);
+    }
 
-    // Send the getUserLocations event to the socketIO server to get the users locations list
-    socket.emit("getUserLocations");
+    // Send the get_location event to the socketIO server to get the users locations list
+    socket.emit("get_location");
 
-    // If socketIO sent the users' locations, cache the list and render it.
-    socket.on("sendUserLocations", (data) => {
-      setUsers([...data]);
+    // If socketIO server sends the users' locations, cache the list and render it.
+    socket.on("send_location", (data) => {
+      // setUsers([...data]);
+      console.log(data);
     });
 
     // Send the user's nickname to the socketIO server
     socket.on("get_user_nickname", () => {
       socket.emit("send_user_nickname", nickname);
     });
-  }, [socket, userLocations, nickname, cntLocation]);
-  console.log(users);
+  }, [socket, userLocations, nickname, cntLocation, locationChanged]);
+
   return (
     <LocationContainer>
-      <Heading as="h1" variant="heading10">
-        Hello {nickname} 👋 <br /> Find your friends' locations!
-      </Heading>
+      <h1
+        style={{
+          lineHeight: "1.4",
+          margin: "0",
+          boxSizing: "border-box",
+          paddingTop: "40px",
+        }}
+      >
+        Hello {nickname} 👋! Find your friends' locations!
+      </h1>
       <NavLinkContainer>
         <LinkContainer to="/">👉 Go to Main Menu</LinkContainer>
         <LinkContainer to="/">👉 Go to Chatting</LinkContainer>
       </NavLinkContainer>
       <MapAndListContainer>
         <MapWithLocations cntLocation={cntLocation} users={users} />
-        <UserList users={users} />
+        <UserList users={users} setCheckedUsers={setCheckedUsers} />
       </MapAndListContainer>
     </LocationContainer>
   );

@@ -18,7 +18,7 @@ const MainPageContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: white;
+  //color: white;
 `;
 
 const LoginButton = styled(Link)`
@@ -36,9 +36,7 @@ function Introduction({ login, setLogin }: IProps) {
   return (
     <>
       <MainPageContainer>
-        <Heading as="h1" variant="heading10" marginBottom="space0">
-          Welcome to <span>Live Location Service !</span>
-        </Heading>
+        <h1 style={{ color: "white" }}>Welcome to Live Location Service !</h1>
         {!login && (
           <LoginButton
             to="/login"

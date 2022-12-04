@@ -19,11 +19,26 @@ const UserListContainer = styled.div`
   }
 `;
 
-function UserList({ users }: { users: UserLocationType[] }) {
+function UserList({
+  users,
+  setCheckedUsers,
+}: {
+  users: UserLocationType[];
+  setCheckedUsers: React.Dispatch<
+    React.SetStateAction<Set<number> | undefined>
+  >;
+}) {
   return (
     <UserListContainer>
       {users.map((user, idx) => {
-        return <UserListItem key={idx} username={user.nickname} idx={idx} />;
+        return (
+          <UserListItem
+            key={idx}
+            username={user.nickname}
+            idx={idx}
+            setCheckedUsers={setCheckedUsers}
+          />
+        );
       })}
     </UserListContainer>
   );
