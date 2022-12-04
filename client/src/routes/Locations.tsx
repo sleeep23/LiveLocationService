@@ -71,7 +71,7 @@ function Locations() {
     setNickname(user.nickname);
 
     // Send the user's nickname to socketIO server
-    socket.emit("add_user", { nickname: user.nickname });
+    socket.emit("addUser", { nickname: user.nickname });
     console.log(cntLocation);
     // Send the user's location to the server with the user nickname
     if (locationChanged) {
@@ -83,7 +83,7 @@ function Locations() {
         },
       });
     } else {
-      socket.emit("add_user_location", {
+      socket.emit("addUserLocation", {
         nickname: user.nickname,
         location: {
           lat: cntLocation.coordinates?.lat,

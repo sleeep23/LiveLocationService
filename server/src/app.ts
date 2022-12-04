@@ -160,7 +160,7 @@ io.on("connection", (socket) => {
     cntUser = nickname;
   });
   socket.on("addUser", (user) => {
-    AddUser(user.nickname, socket.id);
+    AddUser(socket.id, user.nickname);
   });
   socket.on("addUserLocation", (user) => {
     AddUserLocation(socket.id, user.location);
