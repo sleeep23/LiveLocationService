@@ -15,13 +15,22 @@ const LoginPageContainer = styled.div`
 function Login({
   setUsername,
   setIsNew,
+  isNew,
+  setLogin,
 }: {
   setUsername: React.Dispatch<React.SetStateAction<string>>;
   setIsNew: React.Dispatch<React.SetStateAction<boolean>>;
+  setLogin: React.Dispatch<React.SetStateAction<boolean>>;
+  isNew: boolean;
 }) {
   return (
     <LoginPageContainer>
-      <LoginForm setUsername={setUsername} setIsNew={setIsNew} />
+      <LoginForm
+        isNew={isNew}
+        setUsername={setUsername}
+        setIsNew={setIsNew}
+        setLogin={setLogin}
+      />
     </LoginPageContainer>
   );
 }

@@ -44,20 +44,21 @@ interface UserLocationType {
 export let users: Map<string, string> = new Map();
 
 // Adding user and their locations
-const AddUser = async (userID: string, userName: string) => {
-  const { error } = await supabase
-    .from("user")
-    .insert({ user_id: userID, user_name: userName });
-  if (error) console.log("Supabase DB insertion failed: ", error.message);
+const AddUser = async (userName: string) => {
+  const { error } = await supabase.from("user").insert({ user_name: userName });
+  if (error) {
+    console.log("Supabase DB insertion failed at adding user: ", error.message);
+    return error;
+  }
 };
-const RemoveUser = async (userID: string) => {
+const RemoveUser = async (userName: string) => {
   // cascading problem -> solved by delete referenced tuples one by one
   const { error } = await supabase
     .from("chat_member")
     .delete()
-    .match({ user_id: userID });
-  await supabase.from("user_location").delete().match({ user_id: userID });
-  await supabase.from("user").delete().match({ user_id: userID });
+    .match({ user_name: userName });
+  await supabase.from("user_location").delete().match({ user_name: userName });
+  await supabase.from("user").delete().match({ user_name: userName });
   if (error) console.log(error);
 };
 const GetUserInfo = async () => {
@@ -70,7 +71,11 @@ const AddUserLocation = async (userName: string, location: LocationType) => {
   const { error } = await supabase
     .from("user_location")
     .insert({ user_name: userName, lat: location.lat, lng: location.lng });
-  if (error) console.log("Supabase DB insertion failed: ", error.message);
+  if (error)
+    console.log(
+      "Supabase DB insertion failed at adding user location: ",
+      error.message
+    );
 };
 const updateUserLocation = async (userName: string, location: LocationType) => {
   // regular location update
@@ -82,27 +87,58 @@ const updateUserLocation = async (userName: string, location: LocationType) => {
 const GetUserLocations = async () => {
   const { data, error } = await supabase.from("user_location").select("*");
 
-  if (error) console.log("Supabase DB selection failed: ", error.message);
+  if (error)
+    console.log(
+      "Supabase DB selection failed at getting user locations: ",
+      error.message
+    );
   else return data;
 };
 
-const addRoomInfo = async (roomID: string, roomName: string) => {
+const addRoomInfo = async (roomName: string) => {
   const { error } = await supabase
     .from("chat_room")
-    .insert({ room_id: roomID, room_name: roomName });
-  if (error) console.log("Supabase DB insertion failed: ", error.message);
+    .insert({ room_name: roomName });
+  if (error)
+    console.log("Supabase DB insertion failed at adding room info: ", error);
 };
 
-const addRoomMember = async (userIDs: any, roomID: string) => {
-  for (const id of userIDs) {
-    const { error } = await supabase
-      .from("chat_member")
-      .insert({ user_id: id, room_id: roomID });
-    if (error) {
-      console.log(error);
-      exit(1);
-    }
+const addRoomMember = async (name: any, roomName: string) => {
+  const { error } = await supabase
+    .from("chat_member")
+    .insert({ user_name: name, room_name: roomName });
+  if (error) {
+    console.log(error);
   }
+};
+
+const getUserNameFromIndices = async (indices: Array<number>) => {
+  const { data, error } = await supabase
+    .from("user_location")
+    .select("user_name");
+  if (!error) {
+    let names: Array<string> = [];
+    let res: Array<string> = [];
+    data.forEach((name: any) => {
+      names.push(name.user_name);
+    });
+    for (const num of indices) {
+      res.push(names[num]);
+    }
+    return res;
+  } else {
+    console.log("Supabase selection error", error);
+  }
+};
+
+const getRoomNameByMember = async (username: string) => {
+  const { data, error } = await supabase
+    .from("chat_member")
+    .select("room_name")
+    .eq("user_name", username);
+
+  if (error) console.log("Supabase DB selection failed: ", error);
+  return data;
 };
 
 const deleteRoomData = async (userID: string, roomID: string) => {
@@ -114,7 +150,7 @@ const deleteRoomData = async (userID: string, roomID: string) => {
   // 유저가 방에서 나갔을 때, 그 유저의 채팅 히스토리도 모두 지워야 할까?
 };
 
-const GetChatMessage = async (roomId: any) => {
+const getChatMessage = async (roomId: any) => {
   const { data, error } = await supabase
     .from("chat_message")
     .select("*")
@@ -125,13 +161,8 @@ const GetChatMessage = async (roomId: any) => {
 // Socket connection
 io.on("connection", (socket) => {
   socket.on("addUser", (user) => {
-    if (users.get(user.nickname)) {
-      console.log("refresh");
-    }
-    users.set(user.nickname, socket.id);
-    const user_id = users.get(user.nickname);
-    if (user_id) {
-      AddUser(user_id, user.nickname);
+    if (user) {
+      AddUser(user.nickname);
     }
   });
   socket.on("addUserLocation", async (user) => {
@@ -147,30 +178,35 @@ io.on("connection", (socket) => {
     const data = await GetUserInfo();
     socket.emit("send_user_list", data);
   });
-  socket.on("update_location", (user) => {
+  socket.on("update_location", async (user) => {
     // receive regular update calls
-    updateUserLocation(user.nickname, user.location);
+    await updateUserLocation(user.nickname, user.location);
   });
 
   // receive socket id of a clicked client
-  socket.on("createRoom", async (IDs: any) => {
-    // IDs : array of participant's IDs;
-    const { data, error } = await supabase
-      .from("user")
-      .select("user_name")
-      .in("user_id", IDs);
-    // let hostName = Object.keys(users).find(key => users.get(key) === socket.id)
-    // const nickName = GetUserInfo(curID)
-    let roomName = ``;
-    data?.forEach((names) => {
-      roomName = roomName + `${names.user_name}, `;
-    });
-    socket.join(roomName);
-    // room id == socket id of room creater
-    addRoomInfo(socket.id, roomName); // insert room id and room name into 'chat_room' DB
-    addRoomMember(IDs, socket.id); // insert user id and room id into 'chat_member' DB
-    socket.broadcast.to(roomName).emit("sendRoomName");
-  });
+  socket.on(
+    "createRoom",
+    async ({
+      user_name,
+      idx_arr,
+    }: {
+      user_name: string;
+      idx_arr: Array<number>;
+    }) => {
+      // IDs : array of participant's IDs;
+      let names: Array<string> | undefined = [];
+      names = await getUserNameFromIndices(idx_arr);
+      if (names) {
+        names.push(user_name);
+        let roomName = names.join(" , ");
+        socket.join(roomName);
+        addRoomInfo(roomName); // insert room name into 'chat_room' DB
+        for (const name of names) {
+          await addRoomMember(name, roomName); // insert user_name and room_name into 'chat_member' DB
+        }
+      }
+    }
+  );
   // route to ChattingRoom after "createRoom"
 
   socket.on("joinRoom", (roomName) => {
@@ -179,24 +215,18 @@ io.on("connection", (socket) => {
     //socket.to(roomName).emit("welcomeMessage", nickname);
   });
 
-  socket.on("get_rooms", async (user_id) => {
-    let roomIDs: Array<any> = [];
-    const { data, error } = await supabase
-      .from("chat_member")
-      .select("room_id")
-      .eq("user_id", user_id);
-    data?.forEach((item) => {
-      roomIDs.push(item.room_id);
+  socket.on("get_rooms", async (userName) => {
+    let roomNames: Array<string> = [];
+    const data = await getRoomNameByMember(userName);
+    data?.forEach((room) => {
+      roomNames.push(room.room_name);
     });
-    if (!error) {
-      socket.emit("send_rooms", roomIDs);
-    }
-
+    socket.emit("send_rooms", roomNames);
     // output format example: [roomID1, roomID2]
   });
 
   socket.on("get_chat_messages", async (room_id) => {
-    const data = GetChatMessage(room_id);
+    const data = getChatMessage(room_id);
     socket.emit("send_chat_messages", data);
 
     // output format example: [{user_id: userID, room_id: roomID, message: Message, time: current_time}, ...]
@@ -207,10 +237,10 @@ io.on("connection", (socket) => {
       user_id: record.socketID,
       room_id: record.roomID,
       message: record.message,
-      tiem: record.time,
+      time: record.time,
     });
     if (!error) {
-      const data = GetChatMessage(record.roomID);
+      const data = getChatMessage(record.roomID);
       socket.emit("send_updated_chat_messages", data);
     }
 

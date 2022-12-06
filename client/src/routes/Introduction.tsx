@@ -6,7 +6,6 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 
 interface IProps {
   login: boolean;
-  setLogin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const MainPageContainer = styled.div`
@@ -32,21 +31,12 @@ const LoginButton = styled(Link)`
   text-decoration: unset;
 `;
 
-function Introduction({ login, setLogin }: IProps) {
+function Introduction({ login }: IProps) {
   return (
     <>
       <MainPageContainer>
         <h1 style={{ color: "white" }}>Welcome to Live Location Service !</h1>
-        {!login && (
-          <LoginButton
-            to="/login"
-            onClick={() => {
-              setLogin(true);
-            }}
-          >
-            ✊ Login First!
-          </LoginButton>
-        )}
+        {!login && <LoginButton to="/login">✊ Login First!</LoginButton>}
         {login && <Contents />}
       </MainPageContainer>
       <Outlet />

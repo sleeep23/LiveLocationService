@@ -49,27 +49,39 @@ const SubmitButton = styled.input`
 function LoginForm({
   setUsername,
   setIsNew,
+  setLogin,
+  isNew,
 }: {
   setUsername: React.Dispatch<React.SetStateAction<string>>;
   setIsNew: React.Dispatch<React.SetStateAction<boolean>>;
+  setLogin: React.Dispatch<React.SetStateAction<boolean>>;
+  isNew: boolean;
 }) {
   const { register, handleSubmit } = useForm<InputProps>();
   const navigator = useNavigate();
 
-  const onSubmit = (user: InputProps) => {
+  const onSubmit = async (user: InputProps) => {
     if (user.user_name.includes(" ")) {
       alert("Please enter a one word nickname!");
     } else {
-      setUsername(user.user_name);
-      socket.emit("get_user_list");
-      socket.on("send_user_list", (list) => {
-        list.forEach((item: InputProps) => {
+      await setUsername(user.user_name);
+      await socket.emit("get_user_list");
+      await socket.on("send_user_list", (list) => {
+        console.log("Here is the list!");
+        console.log(list);
+        let isNew = true;
+        list.forEach((item: { user_name: string }) => {
           if (item.user_name === user.user_name) {
-            setIsNew(false);
+            isNew = false;
           }
         });
+        if (!isNew) {
+          setIsNew(false);
+        } else {
+          setIsNew(true);
+          socket.emit("addUser", { nickname: user.user_name });
+        }
       });
-      socket.emit("addUser", { nickname: user.user_name });
       navigator("/");
     }
   };
@@ -102,7 +114,13 @@ function LoginForm({
           placeholder="Enter your information"
           required
         />
-        <SubmitButton type="submit" value="Login 👉" />
+        <SubmitButton
+          type="submit"
+          value="Login 👉"
+          onClick={() => {
+            setLogin(true);
+          }}
+        />
       </form>
     </LoginFormContainer>
   );

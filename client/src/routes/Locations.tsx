@@ -3,12 +3,10 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import UserList from "../components/List/UserList";
 import MapWithLocations from "../components/Map/MapWithLocations";
-import { userLocations, UserLocationType } from "../types/userInfos";
-import axios from "axios";
+import { UserLocationType } from "../types/userInfos";
 
 // socket connection
 import { io } from "socket.io-client";
-import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 const socket = io("http://localhost:5100");
 
 const LocationContainer = styled.div`
@@ -50,9 +48,6 @@ const LinkContainer = styled(Link)`
   }
 `;
 
-interface UsernameProps {
-  username: string;
-}
 export interface LocationProp {
   lat: number;
   lng: number;
@@ -60,51 +55,56 @@ export interface LocationProp {
 
 function Locations({ username, isNew }: { username: string; isNew: boolean }) {
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
-  const [checkedUsers, setCheckedUsers] = useState<Set<number> | undefined>();
-  const [location, setLocation] = useState<LocationProp>({ lat: 35, lng: 35 });
-  const cntLocation: locationType = useGeoloaction();
+
+  // const [location, setLocation] = useState<LocationProp>({
+  //   lat: 35.2301898,
+  //   lng: 126.843083,
+  // });
   useEffect(() => {
-    const setNavigatorlocation = async () => {
-      let temp = {
-        lat: 35.23018987720772,
-        lng: 126.84308370285073,
-      };
-      if (cntLocation.loaded) {
-        temp = {
-          lat: cntLocation.coordinates?.lat as number,
-          lng: cntLocation.coordinates?.lng as number,
-        };
+    addAndUpdate();
+  }, [navigator, isNew, socket]);
+  const addAndUpdate = async () => {
+    await navigator.geolocation.getCurrentPosition((res) => {
+      // setLocation({ lat: res.coords.latitude, lng: res.coords.longitude });
+      console.log(res);
+      if (username !== "") {
+        console.log(isNew);
+        if (!isNew) {
+          if (res) {
+            socket.emit("update_location", {
+              nickname: username,
+              location: {
+                lat: res.coords.latitude,
+                lng: res.coords.longitude,
+              },
+            });
+            console.log("User location updated!");
+          } else {
+            console.log("Waiting for location info from browser");
+          }
+        } else {
+          socket.emit("addUserLocation", {
+            nickname: username,
+            location: {
+              lat: res.coords.latitude,
+              lng: res.coords.longitude,
+            },
+          });
+          console.log("User location added!");
+        }
       }
-      setLocation(temp);
-    };
-    setNavigatorlocation();
-  }, [cntLocation]);
+    });
+  };
 
   useEffect(() => {
-    if (username !== "") {
-      if (!isNew) {
-        socket.emit("update_location", {
-          nickname: username,
-          location: location,
-        });
-        console.log("User location updated!");
-      } else {
-        socket.emit("addUserLocation", {
-          nickname: username,
-          location: location,
-        });
-        console.log("User location added!");
-      }
-    }
-
     socket.emit("get_location");
     socket.on("send_locations", (data) => {
       if (data) {
-        console.log(data);
+        // console.log(data);
         setUsers(data as Array<UserLocationType>);
       }
     });
-  }, [socket, isNew, username]);
+  }, [socket]);
 
   return (
     <LocationContainer>
@@ -120,11 +120,11 @@ function Locations({ username, isNew }: { username: string; isNew: boolean }) {
       </h1>
       <NavLinkContainer>
         <LinkContainer to="/">👉 Go to Main Menu</LinkContainer>
-        <LinkContainer to="/">👉 Go to Chatting</LinkContainer>
+        <LinkContainer to="/chat">👉 Go to Chatting</LinkContainer>
       </NavLinkContainer>
       <MapAndListContainer>
         <MapWithLocations users={users} />
-        <UserList users={users} setCheckedUsers={setCheckedUsers} />
+        <UserList users={users} username={username} />
       </MapAndListContainer>
     </LocationContainer>
   );
