@@ -34,7 +34,7 @@ function UserList({
         return (
           <UserListItem
             key={idx}
-            username={user.nickname}
+            username={user.user_name}
             idx={idx}
             setCheckedUsers={setCheckedUsers}
           />

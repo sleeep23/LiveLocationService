@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Map, MapMarker } from "react-kakao-maps-sdk";
 import styled from "styled-components";
-import { locationType } from "../../hook/useGeoloaction";
-import { UserLocationType } from "../../types/userInfos";
+import useGeoloaction, { locationType } from "../../hook/useGeoloaction";
+import { LocationType, UserLocationType } from "../../types/userInfos";
 
 interface MapProps {
-  cntLocation: locationType;
-  users: UserLocationType[];
+  users: Array<UserLocationType>;
 }
 
 const MapContainer = styled.div`
@@ -16,14 +15,14 @@ const MapContainer = styled.div`
   border-radius: 16px;
 `;
 
-function MapWithLocations({ cntLocation, users }: MapProps) {
-  const [isOpen, setIsOpen] = useState(false);
+function MapWithLocations({ users }: MapProps) {
+  const cntLocation: locationType = useGeoloaction();
   return (
     <MapContainer>
       <Map
         center={{
-          lat: cntLocation.coordinates?.lat as number,
-          lng: cntLocation.coordinates?.lng as number,
+          lat: (cntLocation.coordinates?.lat as number) || 35.5,
+          lng: (cntLocation.coordinates?.lng as number) || 34.5,
         }}
         style={{
           width: "100%",
@@ -32,35 +31,22 @@ function MapWithLocations({ cntLocation, users }: MapProps) {
         }}
         zoomable={true}
       >
-        {users.map((user, idx) => {
-          const temp = {
-            lat: user.location[0].lat,
-            lng: user.location[0].lng,
-          };
+        {users.map((user: UserLocationType, idx) => {
+          console.log(user);
+          const temp = user.lat
+            ? { lat: user.lat, lng: user.lng }
+            : { lat: 35.1962, lng: 126.9248 };
           return (
             <MapMarker
               position={temp}
-              title={user.nickname}
+              title={user.user_name}
               key={idx}
               image={{
                 src: "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png",
                 size: { width: 12, height: 18 },
               }}
               clickable={true}
-              onClick={() => setIsOpen((prev) => !prev)}
-            >
-              {isOpen && (
-                <div
-                  style={{
-                    fontSize: "12px",
-                    padding: "5px",
-                    color: "#000",
-                  }}
-                >
-                  {user.nickname}
-                </div>
-              )}
-            </MapMarker>
+            ></MapMarker>
           );
         })}
       </Map>

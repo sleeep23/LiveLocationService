@@ -11,7 +11,7 @@ import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 const socket = io("http://localhost:5100");
 
 interface InputProps {
-  nickname: string;
+  user_name: string;
 }
 
 const LoginFormContainer = styled.div`
@@ -48,19 +48,28 @@ const SubmitButton = styled.input`
 
 function LoginForm({
   setUsername,
+  setIsNew,
 }: {
   setUsername: React.Dispatch<React.SetStateAction<string>>;
+  setIsNew: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const { register, handleSubmit } = useForm<InputProps>();
   const navigator = useNavigate();
-  const cntLocation: locationType = useGeoloaction();
-  let username = "";
+
   const onSubmit = (user: InputProps) => {
-    if (user.nickname.includes(" ")) {
+    if (user.user_name.includes(" ")) {
       alert("Please enter a one word nickname!");
     } else {
-      setUsername(user.nickname);
-      socket.emit("addUser", { nickname: user.nickname });
+      setUsername(user.user_name);
+      socket.emit("get_user_list");
+      socket.on("send_user_list", (list) => {
+        list.forEach((item: InputProps) => {
+          if (item.user_name === user.user_name) {
+            setIsNew(false);
+          }
+        });
+      });
+      socket.emit("addUser", { nickname: user.user_name });
       navigator("/");
     }
   };
@@ -88,7 +97,7 @@ function LoginForm({
         <NicknameInput
           aria-describedby="nickname"
           id="nickname"
-          {...register("nickname", { required: true })}
+          {...register("user_name", { required: true })}
           type="text"
           placeholder="Enter your information"
           required

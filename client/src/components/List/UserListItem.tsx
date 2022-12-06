@@ -5,7 +5,7 @@ const UserListItemContainer = styled.div`
   box-sizing: border-box;
   margin-bottom: 10px;
   margin-top: 0;
-  padding: 20px;
+  padding: 10px;
   width: 100%;
   height: 48px;
   border-radius: 16px;
@@ -56,27 +56,31 @@ function UserListItem({
         style={{
           boxSizing: "border-box",
           display: "flex",
+          width: "fit-content",
           flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
         }}
       >
         <p
           style={{
             margin: "0",
-            fontSize: "18px",
+            fontSize: "16px",
             boxSizing: "border-box",
-            marginRight: "8px",
+            paddingRight: "8px",
+            overflow: "hidden",
           }}
         >
-          User {idx + 1} :
+          User {idx + 1}:
         </p>
         <p
           style={{
             margin: "0",
-            fontSize: "18px",
+            fontSize: "14px",
             boxSizing: "border-box",
-            marginRight: "8px",
+            paddingLeft: "8px",
+            paddingRight: "8px",
+            overflowX: "hidden",
           }}
         >
           {username}

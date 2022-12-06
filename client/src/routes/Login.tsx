@@ -14,12 +14,14 @@ const LoginPageContainer = styled.div`
 
 function Login({
   setUsername,
+  setIsNew,
 }: {
   setUsername: React.Dispatch<React.SetStateAction<string>>;
+  setIsNew: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
     <LoginPageContainer>
-      <LoginForm setUsername={setUsername} />
+      <LoginForm setUsername={setUsername} setIsNew={setIsNew} />
     </LoginPageContainer>
   );
 }

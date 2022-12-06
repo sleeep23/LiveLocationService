@@ -1,15 +1,14 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 import UserList from "../components/List/UserList";
 import MapWithLocations from "../components/Map/MapWithLocations";
 import { userLocations, UserLocationType } from "../types/userInfos";
+import axios from "axios";
 
 // socket connection
 import { io } from "socket.io-client";
-import axios from "axios";
-
+import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 const socket = io("http://localhost:5100");
 
 const LocationContainer = styled.div`
@@ -54,62 +53,58 @@ const LinkContainer = styled(Link)`
 interface UsernameProps {
   username: string;
 }
-interface LocationProp {
+export interface LocationProp {
   lat: number;
   lng: number;
 }
 
-function Locations({ username }: { username: string }) {
+function Locations({ username, isNew }: { username: string; isNew: boolean }) {
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
   const [checkedUsers, setCheckedUsers] = useState<Set<number> | undefined>();
-  // const [newUser, setNewUser] = useState(true);
-  const [locationChanged, setLocationChanged] = useState(false);
   const [location, setLocation] = useState<LocationProp>({ lat: 35, lng: 35 });
-  // types [nickname, setNickname] = useState("");
   const cntLocation: locationType = useGeoloaction();
-  console.log(cntLocation);
+  useEffect(() => {
+    const setNavigatorlocation = async () => {
+      let temp = {
+        lat: 35.23018987720772,
+        lng: 126.84308370285073,
+      };
+      if (cntLocation.loaded) {
+        temp = {
+          lat: cntLocation.coordinates?.lat as number,
+          lng: cntLocation.coordinates?.lng as number,
+        };
+      }
+      setLocation(temp);
+    };
+    setNavigatorlocation();
+  }, [cntLocation]);
 
   useEffect(() => {
-    // Send the user's location to the server with the user nickname
-    const getLocation = async () => {
-      const locationData = await axios
-        .get(
-          "https://ipgeolocation.abstractapi.com/v1/?api_key=daf9e325320547d9ab6e8f93060215d3"
-        )
-        .then((response) => {
-          return response;
+    if (username !== "") {
+      if (!isNew) {
+        socket.emit("update_location", {
+          nickname: username,
+          location: location,
         });
-
-      if (username !== "") {
-        if (locationChanged) {
-          await socket.emit("update_location", {
-            nickname: username,
-            location: {
-              lat: locationData.data.latitude,
-              lng: locationData.data.longitude,
-            },
-          });
-        } else {
-          await socket.emit("addUserLocation", {
-            nickname: username,
-            location: {
-              lat: locationData.data.latitude,
-              lng: locationData.data.longitude,
-            },
-          });
-          await setLocationChanged(true);
-        }
-
-        await socket.emit("get_location");
-        await socket.on("send_locations", (data) => {
-          if (data) {
-            setUsers(data as Array<UserLocationType>);
-          }
+        console.log("User location updated!");
+      } else {
+        socket.emit("addUserLocation", {
+          nickname: username,
+          location: location,
         });
+        console.log("User location added!");
       }
-    };
-    getLocation();
-  }, [socket, userLocations, username, locationChanged]);
+    }
+
+    socket.emit("get_location");
+    socket.on("send_locations", (data) => {
+      if (data) {
+        console.log(data);
+        setUsers(data as Array<UserLocationType>);
+      }
+    });
+  }, [socket, isNew, username]);
 
   return (
     <LocationContainer>
@@ -128,7 +123,7 @@ function Locations({ username }: { username: string }) {
         <LinkContainer to="/">👉 Go to Chatting</LinkContainer>
       </NavLinkContainer>
       <MapAndListContainer>
-        <MapWithLocations cntLocation={cntLocation} users={users} />
+        <MapWithLocations users={users} />
         <UserList users={users} setCheckedUsers={setCheckedUsers} />
       </MapAndListContainer>
     </LocationContainer>

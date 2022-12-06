@@ -11,6 +11,7 @@ import { UserLocationType } from "./types/userInfos";
 function App() {
   const [login, setLogin] = useState<boolean>(false);
   const [username, setUsername] = useState<string>("");
+  const [isNew, setIsNew] = useState(false);
   console.log(username);
   return (
     <Theme.Provider theme="sendgrid">
@@ -20,8 +21,14 @@ function App() {
           element={<Introduction login={login} setLogin={setLogin} />}
         />
         {/*<Route path="register" element={<Register />} />*/}
-        <Route path="login" element={<Login setUsername={setUsername} />} />
-        <Route path="locations" element={<Locations username={username} />} />
+        <Route
+          path="login"
+          element={<Login setUsername={setUsername} setIsNew={setIsNew} />}
+        />
+        <Route
+          path="locations"
+          element={<Locations isNew={isNew} username={username} />}
+        />
         <Route path="chat" element={<ChattingRoom />} />
       </Routes>
     </Theme.Provider>
