@@ -55,24 +55,28 @@ export interface LocationProp {
 
 function Locations({ username, isNew }: { username: string; isNew: boolean }) {
   const [users, setUsers] = useState<Array<UserLocationType>>([]);
-
+  const [cntUser, setCntUser] = useState("");
   // const [location, setLocation] = useState<LocationProp>({
   //   lat: 35.2301898,
   //   lng: 126.843083,
   // });
   useEffect(() => {
     addAndUpdate();
-  }, [navigator, isNew, socket]);
+  }, [navigator, isNew, localStorage]);
   const addAndUpdate = async () => {
+    let user_name = await localStorage.getItem("username");
+    if (user_name) {
+      setCntUser(user_name);
+    }
     await navigator.geolocation.getCurrentPosition((res) => {
       // setLocation({ lat: res.coords.latitude, lng: res.coords.longitude });
       console.log(res);
-      if (username !== "") {
+      if (user_name !== "") {
         console.log(isNew);
         if (!isNew) {
           if (res) {
             socket.emit("update_location", {
-              nickname: username,
+              nickname: user_name,
               location: {
                 lat: res.coords.latitude,
                 lng: res.coords.longitude,
@@ -84,7 +88,7 @@ function Locations({ username, isNew }: { username: string; isNew: boolean }) {
           }
         } else {
           socket.emit("addUserLocation", {
-            nickname: username,
+            nickname: user_name,
             location: {
               lat: res.coords.latitude,
               lng: res.coords.longitude,
@@ -116,7 +120,7 @@ function Locations({ username, isNew }: { username: string; isNew: boolean }) {
           paddingTop: "40px",
         }}
       >
-        Hello {username} 👋! Find your friends' locations!
+        Hello {cntUser} 👋! Find your friends' locations!
       </h1>
       <NavLinkContainer>
         <LinkContainer to="/">👉 Go to Main Menu</LinkContainer>

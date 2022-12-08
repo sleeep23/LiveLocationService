@@ -1,3 +1,4 @@
+import React from "react";
 import styled from "styled-components";
 import { Label } from "@twilio-paste/core/label";
 import { Heading } from "@twilio-paste/core/heading";
@@ -6,8 +7,6 @@ import { useNavigate } from "react-router-dom";
 
 // socket io connection
 import { io } from "socket.io-client";
-import React, { useEffect, useState } from "react";
-import useGeoloaction, { locationType } from "../hook/useGeoloaction";
 const socket = io("http://localhost:5100");
 
 interface InputProps {
@@ -35,7 +34,7 @@ const NicknameInput = styled.input`
   width: 90%;
   border-radius: 4px;
 `;
-const SubmitButton = styled.input`
+const SubmitButton = styled.button`
   box-sizing: border-box;
   margin-top: 20px;
   padding: 12px 16px;
@@ -59,12 +58,12 @@ function LoginForm({
 }) {
   const { register, handleSubmit } = useForm<InputProps>();
   const navigator = useNavigate();
-
   const onSubmit = async (user: InputProps) => {
     if (user.user_name.includes(" ")) {
       alert("Please enter a one word nickname!");
     } else {
       await setUsername(user.user_name);
+      await localStorage.setItem("username", user.user_name);
       await socket.emit("get_user_list");
       await socket.on("send_user_list", (list) => {
         console.log("Here is the list!");
@@ -117,10 +116,12 @@ function LoginForm({
         <SubmitButton
           type="submit"
           value="Login 👉"
-          onClick={() => {
+          onClick={(event) => {
             setLogin(true);
           }}
-        />
+        >
+          Login 👉
+        </SubmitButton>
       </form>
     </LoginFormContainer>
   );

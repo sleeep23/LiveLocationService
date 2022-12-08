@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 const SingleGroupSidebarContainer = styled.div`
@@ -15,13 +15,18 @@ const SingleGroupSidebarContainer = styled.div`
   gap: 20px;
 `;
 
-function SingleGroupSidebar() {
+function SingleGroupSidebar({ cntRoomName }: { cntRoomName: string }) {
   const [members, setMembers] = useState([
     "member1",
     "member2",
     "member3",
     "member4",
   ]);
+  useEffect(() => {
+    console.log(cntRoomName);
+    setMembers(cntRoomName.substring(0, cntRoomName.length).split(" , "));
+  }, [cntRoomName]);
+
   const memberListContent = members.map((item, index) => {
     return (
       <p style={{ color: "white" }} key={index}>

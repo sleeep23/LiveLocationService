@@ -38,9 +38,10 @@ function UserList({
     console.log(user_index.sort());
   }
   const onClickHandler = () => {
+    let user_name = localStorage.getItem("username");
     if (user_index.toString() !== "[]") {
       socket.emit("createRoom", {
-        user_name: username,
+        user_name: user_name,
         idx_arr: user_index.sort(),
       });
       alert("Room created! Check your chatting room!");

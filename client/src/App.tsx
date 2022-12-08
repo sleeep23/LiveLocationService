@@ -31,7 +31,7 @@ function App() {
           path="locations"
           element={<Locations isNew={isNew} username={username} />}
         />
-        <Route path="chat" element={<ChattingRoom />} />
+        <Route path="chat" element={<ChattingRoom username={username} />} />
       </Routes>
     </Theme.Provider>
   );
