@@ -56,7 +56,7 @@ function Chatting({
   const [members, setMembers] = useState<string>("");
   // chat message update & get current room chat messages
 
-  // get room members
+  // get room members' chat messages
   useEffect(() => {
     socket.emit("joinRoom", cntRoomName);
     socket.emit("get_chat_messages", cntRoomName);
