@@ -6,4 +6,6 @@ client/dist
 server/node_modules
 server/build
 server/dist
+.DS_Store
+
 
