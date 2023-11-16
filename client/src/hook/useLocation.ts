@@ -9,7 +9,9 @@ function useLocation() {
     const location = async () => {
       axios
         .get(
-          "https://ipgeolocation.abstractapi.com/v1/?api_key=daf9e325320547d9ab6e8f93060215d3"
+          `https://ipgeolocation.abstractapi.com/v1/?api_key=${
+            import.meta.env.VITE_ABSTRACT_API_KEY
+          }`
         )
         .then((response) => {
           return response.data;
